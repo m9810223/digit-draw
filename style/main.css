@@ -83,9 +83,18 @@ h2 {
 
 /* 開獎揭曉：同 filled */
 
-.amount-result,
-.amount-confirm {
+/* 按鈕區域：固定高度避免版面跳動 */
+.amount-actions {
     margin-top: 0.5rem;
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.amount-actions-placeholder {
+    display: block;
+    height: 100%;
 }
 
 /* 確認開獎：金底、暗紅字、暗金框 */
@@ -106,7 +115,6 @@ h2 {
 
 /* 再玩一次：金底、暗紅字、暗金框 */
 .reset-btn {
-    margin-top: 1rem;
     padding: 0.75rem 2rem;
     font-size: 1.1rem;
     background-color: var(--gold-primary);
@@ -162,9 +170,10 @@ h2 {
     border: 2px solid var(--red-dark);
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s, transform 0.6s ease;
     margin-top: 0;
     padding: 0;
+    transform-style: preserve-3d;
 }
 
 .pad-cell-text {

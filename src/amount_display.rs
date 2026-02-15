@@ -42,38 +42,35 @@ pub fn AmountDisplay(
                 }}
             </div>
 
-            {move || {
-                let hidden = hidden_mode.get();
-                let finished = game_finished.get();
-                let nums = selected_numbers.get();
-                let needed = digits_needed.get();
-                let all_selected = nums.len() as u8 == needed;
-                if finished || (!hidden && all_selected) {
-
-                    view! {
-                        <div class="amount-result">
+            <div class="amount-actions">
+                {move || {
+                    let hidden = hidden_mode.get();
+                    let finished = game_finished.get();
+                    let nums = selected_numbers.get();
+                    let needed = digits_needed.get();
+                    let all_selected = nums.len() as u8 == needed;
+                    if finished || (!hidden && all_selected) {
+                        view! {
                             <button class="reset-btn" on:click=move |_| on_reset.run(())>
                                 "再玩一次"
                             </button>
-                        </div>
-                    }
-                        .into_any()
-                } else if hidden && all_selected {
-                    view! {
-                        <div class="amount-confirm">
+                        }
+                            .into_any()
+                    } else if hidden && all_selected {
+                        view! {
                             <button
                                 class="confirm-btn"
                                 on:click=move |_| set_game_finished.set(true)
                             >
                                 "確認開獎！"
                             </button>
-                        </div>
+                        }
+                            .into_any()
+                    } else {
+                        view! { <span class="amount-actions-placeholder"></span> }.into_any()
                     }
-                        .into_any()
-                } else {
-                    view! { <div></div> }.into_any()
-                }
-            }}
+                }}
+            </div>
         </div>
     }
 }
