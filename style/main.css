@@ -1,0 +1,357 @@
+/* === 色彩變數（紅色主體 + 金黃色輔助） === */
+:root {
+    --red-primary: #c41e2a;
+    --red-dark: #9a1520;
+    --red-light: #e63946;
+    --gold-primary: #f0c040;
+    --gold-light: #f5d76e;
+    --gold-dark: #c9a020;
+    --bg-dark: #1a0a0a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--gold-light);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+.container {
+    text-align: center;
+    padding: 2rem;
+    max-width: 480px;
+    width: 100%;
+}
+
+h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    color: var(--gold-dark);
+}
+
+/* === 金額顯示 (AmountDisplay) === */
+.amount-display {
+    margin-bottom: 1.5rem;
+}
+
+.amount-digits {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+/* 未填入：暗紅底、暗金字、暗紅框 */
+.amount-digit {
+    flex: 1;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: bold;
+    font-family: "Courier New", Courier, monospace;
+    color: var(--gold-dark);
+    background-color: var(--red-dark);
+    border: 2px solid var(--red-dark);
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+/* 已填入：紅底、金字、金框 */
+.amount-digit.filled {
+    color: var(--gold-primary);
+    background-color: var(--red-primary);
+    border-color: var(--gold-primary);
+}
+
+/* 隱藏模式未開獎：暗紅底、暗紅字（隱藏）、暗紅框 */
+.amount-digit.hidden {
+    color: var(--red-dark);
+    background-color: var(--red-dark);
+    border-color: var(--red-dark);
+}
+
+/* 開獎揭曉：同 filled */
+
+.amount-result,
+.amount-confirm {
+    margin-top: 0.5rem;
+}
+
+/* 確認開獎：金底、暗紅字、暗金框 */
+.confirm-btn {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    background-color: var(--gold-primary);
+    color: var(--red-dark);
+    border: 2px solid var(--gold-dark);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.confirm-btn:hover {
+    background-color: var(--gold-light);
+}
+
+/* 再玩一次：金底、暗紅字、暗金框 */
+.reset-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    background-color: var(--gold-primary);
+    color: var(--red-dark);
+    border: 2px solid var(--gold-dark);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.reset-btn:hover {
+    background-color: var(--gold-light);
+}
+
+/* === 九宮格 (NumberPad) === */
+.number-pad {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    perspective: 800px;
+}
+
+.number-pad-size {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.number-pad-size input[type="range"] {
+    width: 100%;
+    accent-color: var(--red-primary);
+    cursor: pointer;
+}
+
+.number-pad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin: 0 auto;
+    transform-style: preserve-3d;
+}
+
+/* 可選：紅底、金淺字、暗紅框 */
+.pad-cell {
+    aspect-ratio: 1;
+    font-size: 2.5rem;
+    font-weight: bold;
+    background-color: var(--red-primary);
+    color: var(--gold-light);
+    border: 2px solid var(--red-dark);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 0;
+    padding: 0;
+}
+
+.pad-cell-text {
+    display: inline-block;
+}
+
+/* hover：亮紅底、金淺字、金框 */
+.pad-cell:hover:not(.disabled) {
+    background-color: var(--red-light);
+    border-color: var(--gold-primary);
+}
+
+/* 已選取：金底、暗紅字、暗金框 */
+.pad-cell.selected {
+    background-color: var(--gold-primary);
+    border-color: var(--gold-dark);
+    color: var(--red-dark);
+    transform: scale(1.05);
+}
+
+/* disabled：同可選但降透明度 */
+.pad-cell.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* exceeds：同可選但更低透明度 */
+.pad-cell.exceeds {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+/* 隨機按鈕：紅底、金淺字、暗紅框 */
+.number-pad-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.pad-action-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    background-color: var(--red-primary);
+    color: var(--gold-light);
+    border: 2px solid var(--red-dark);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* 隨機按鈕 hover：亮紅底、金淺字、金框 */
+.pad-action-btn:hover {
+    background-color: var(--red-light);
+    border-color: var(--gold-primary);
+}
+
+/* === 範圍設定 (RangeConfig) === */
+.range-config {
+    margin-bottom: 1.5rem;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* 模式切換 inactive：暗紅底、暗金字、暗紅框 */
+.mode-toggle button {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    background-color: var(--red-dark);
+    color: var(--gold-dark);
+    border: 2px solid var(--red-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 0;
+}
+
+/* 模式切換 active：金底、暗紅字、暗金框 */
+.mode-toggle button.active {
+    background-color: var(--gold-primary);
+    color: var(--red-dark);
+    border-color: var(--gold-dark);
+}
+
+.digit-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.stepper-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background-color: var(--red-primary);
+    color: var(--gold-light);
+    border: 2px solid var(--red-dark);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 0;
+    padding: 0;
+    line-height: 1;
+}
+
+.stepper-btn:hover:not(:disabled) {
+    background-color: var(--red-light);
+    border-color: var(--gold-primary);
+}
+
+.stepper-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.stepper-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--gold-primary);
+    min-width: 2ch;
+    text-align: center;
+}
+
+.max-amount-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.max-amount-input label {
+    font-size: 1rem;
+    color: var(--gold-dark);
+}
+
+.max-amount-input input {
+    width: 160px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.1rem;
+    background-color: var(--red-dark);
+    color: var(--gold-primary);
+    border: 2px solid var(--red-dark);
+    border-radius: 6px;
+    text-align: center;
+    outline: none;
+}
+
+.max-amount-input input:focus {
+    border-color: var(--gold-primary);
+}
+
+/* === 遊戲選項 (GameOptions) === */
+.game-options {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+/* 選項 inactive：暗紅底、暗金字、暗紅框 */
+.option-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    background-color: var(--red-dark);
+    color: var(--gold-dark);
+    border: 2px solid var(--red-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.option-btn:hover {
+    background-color: var(--red-primary);
+    border-color: var(--gold-primary);
+    color: var(--gold-light);
+}
+
+/* 選項 active：金底、暗紅字、暗金框 */
+.option-btn.active {
+    background-color: var(--gold-primary);
+    color: var(--red-dark);
+    border-color: var(--gold-dark);
+}
+
