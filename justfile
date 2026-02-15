@@ -35,10 +35,14 @@ fmt:
 lint:
     cargo clippy --target wasm32-unknown-unknown -- -D warnings
 
-# 部署到 GitHub Pages
+# 建置 GitHub Pages 版本
 [group("deploy")]
-deploy repo:
-    trunk build --release --public-url /{{repo}}/
+build-pages repo:
+    trunk build --release --public-url /{{ repo }}/
+
+# 手動部署到 GitHub Pages
+[group("deploy")]
+deploy repo: (build-pages repo)
     npx gh-pages -d dist
 
 # 安裝開發所需工具（首次設定用）
