@@ -3,6 +3,8 @@ use leptos::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rand::Rng;
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::JsCast;
 
 /// 計算已選數字組成的金額（由個位數開始）
 fn current_amount(selected: &[u8]) -> u64 {
@@ -49,59 +51,38 @@ fn random_transform(current: &str) -> (String, String) {
     (pair.0.to_string(), pair.1.to_string())
 }
 
-/// 一排（row 或 column）的 transform 配對
-/// row 使用 rotateX（水平軸翻轉），column 使用 rotateY（垂直軸翻轉）
-const ROW_TRANSFORMS: [&str; 4] = ["", "rotateX(180deg)", "rotateX(360deg)", "rotateX(-180deg)"];
-const COL_TRANSFORMS: [&str; 4] = ["", "rotateY(180deg)", "rotateY(360deg)", "rotateY(-180deg)"];
-
-/// 每個 cell 的 transform 狀態：(cell transform, text counter-transform)
-type CellTransforms = [(String, String); 9];
-
-fn default_cell_transforms() -> CellTransforms {
-    std::array::from_fn(|_| (String::new(), String::new()))
+/// 轉動方向
+#[derive(Clone, Copy)]
+enum RotateDir {
+    /// 所有 row 向右循環
+    RowRight,
+    /// 所有 column 向下循環
+    ColDown,
 }
 
-/// 隨機選一個 row 或 column，對該排的 cell 套用 transform
-fn random_line_transform(current: &CellTransforms) -> CellTransforms {
-    let mut rng = thread_rng();
-    let mut result = current.clone();
-
-    // 隨機選 row(0-2) 或 col(0-2)
-    let is_row = rng.gen_bool(0.5);
-    let line_idx = rng.gen_range(0..3);
-
-    // 取得該排的 cell index
-    let indices: [usize; 3] = if is_row {
-        [line_idx * 3, line_idx * 3 + 1, line_idx * 3 + 2]
+/// 隨機選擇方向
+fn random_rotate_dir() -> RotateDir {
+    if thread_rng().gen_bool(0.5) {
+        RotateDir::RowRight
     } else {
-        [line_idx, line_idx + 3, line_idx + 6]
-    };
-
-    let transforms = if is_row {
-        &ROW_TRANSFORMS
-    } else {
-        &COL_TRANSFORMS
-    };
-
-    // 選一個與目前不同的 transform
-    let current_tf = &current[indices[0]].0;
-    let candidates: Vec<_> = transforms.iter().filter(|tf| *tf != current_tf).collect();
-    let &chosen = candidates.choose(&mut rng).unwrap();
-
-    // counter-transform：反向旋轉讓文字保持可讀
-    let counter = if chosen.is_empty() {
-        String::new()
-    } else if chosen.contains("rotateX") {
-        chosen.replace("rotateX(", "rotateX(-").replace("(-(-", "(")
-    } else {
-        chosen.replace("rotateY(", "rotateY(-").replace("(-(-", "(")
-    };
-
-    for &i in &indices {
-        result[i] = (chosen.to_string(), counter.clone());
+        RotateDir::ColDown
     }
+}
 
-    result
+/// 依方向將所有 row/column 做循環位移
+fn rotate_lines(nums: &mut [u8], dir: RotateDir) {
+    let lines: [[usize; 3]; 3] = match dir {
+        RotateDir::RowRight => [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
+        RotateDir::ColDown => [[0, 3, 6], [1, 4, 7], [2, 5, 8]],
+    };
+
+    for indices in &lines {
+        // [a, b, c] -> [c, a, b]
+        let last = nums[indices[2]];
+        nums[indices[2]] = nums[indices[1]];
+        nums[indices[1]] = nums[indices[0]];
+        nums[indices[0]] = last;
+    }
 }
 
 #[component]
@@ -118,7 +99,9 @@ pub fn NumberPad(
     let (grid_numbers, set_grid_numbers) = signal(vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9]);
     let (pad_size, set_pad_size) = signal(100u32);
     let (grid_transform, set_grid_transform) = signal((String::new(), String::new()));
-    let (cell_transforms, set_cell_transforms) = signal(default_cell_transforms());
+    // 轉動一排動畫：CSS class 名稱（"rotate-row" 或 "rotate-col"）
+    let (rotate_anim, set_rotate_anim) = signal(String::new());
+    let (animating, set_animating) = signal(false);
 
     let on_shuffle = move |_| {
         let mut nums = grid_numbers.get();
@@ -152,13 +135,39 @@ pub fn NumberPad(
     };
 
     let on_spin = move |_| {
-        let (ref current, _) = grid_transform.get();
-        set_grid_transform.set(random_transform(current));
-    };
-
-    let on_spin_line = move |_| {
-        let current = cell_transforms.get();
-        set_cell_transforms.set(random_line_transform(&current));
+        if animating.get() {
+            return;
+        }
+        let mut rng = thread_rng();
+        if rng.gen_bool(0.5) {
+            let (ref current, _) = grid_transform.get();
+            set_grid_transform.set(random_transform(current));
+        } else {
+            let dir = random_rotate_dir();
+            let anim_class = match dir {
+                RotateDir::RowRight => "rotate-row",
+                RotateDir::ColDown => "rotate-col",
+            };
+            // 1) 加上 CSS animation class
+            set_rotate_anim.set(anim_class.to_string());
+            set_animating.set(true);
+            // 2) 動畫結束後：更新數字、移除 class
+            let window = web_sys::window().unwrap();
+            let cb = Closure::once(move || {
+                let mut nums = grid_numbers.get();
+                rotate_lines(&mut nums, dir);
+                set_grid_numbers.set(nums);
+                set_rotate_anim.set(String::new());
+                set_animating.set(false);
+            });
+            window
+                .set_timeout_with_callback_and_timeout_and_arguments_0(
+                    cb.as_ref().unchecked_ref(),
+                    420,
+                )
+                .unwrap();
+            cb.forget();
+        }
     };
 
     let pad_style = move || {
@@ -174,26 +183,28 @@ pub fn NumberPad(
         }
     };
 
-    /// 組合 transform 字串，加上 transition
-    fn style_with_transform(transforms: &[&str]) -> String {
-        let combined: Vec<_> = transforms
-            .iter()
-            .filter(|s| !s.is_empty())
-            .copied()
-            .collect();
-        if combined.is_empty() {
+    let text_style = move || {
+        let (_, ref counter) = grid_transform.get();
+        if counter.is_empty() {
             "transition: transform 0.6s ease".to_string()
         } else {
-            format!(
-                "transform: {}; transition: transform 0.6s ease",
-                combined.join(" ")
-            )
+            format!("transform: {}; transition: transform 0.6s ease", counter)
         }
-    }
+    };
 
     view! {
         <div class="number-pad">
-            <div class="number-pad-grid" style=pad_style>
+            <div
+                class=move || {
+                    let anim = rotate_anim.get();
+                    if anim.is_empty() {
+                        "number-pad-grid".to_string()
+                    } else {
+                        format!("number-pad-grid {}", anim)
+                    }
+                }
+                style=pad_style
+            >
                 {move || {
                     let selected = selected_numbers.get();
                     let finished = game_finished.get();
@@ -201,13 +212,10 @@ pub fn NumberPad(
                     let current_mode = mode.get();
                     let amt_limit = max_amount.get();
                     let no_rep = no_repeat.get();
-                    let (_, ref grid_counter) = grid_transform.get();
-                    let ct = cell_transforms.get();
                     grid_numbers
                         .get()
                         .into_iter()
-                        .enumerate()
-                        .map(|(idx, num)| {
+                        .map(|num| {
                             let is_selected = selected.contains(&num);
                             let at_capacity = selected.len() as u8 >= needed;
                             let exceeds_limit = current_mode == LimitMode::ByMaxAmount
@@ -224,19 +232,16 @@ pub fn NumberPad(
                             } else {
                                 num.to_string()
                             };
-                            let (ref cell_tf, ref cell_counter) = ct[idx];
-                            let btn_style = style_with_transform(&[grid_counter, cell_tf]);
-                            let text_style = style_with_transform(&[cell_counter]);
+                            let ts = text_style();
                             view! {
                                 <button
                                     class="pad-cell"
                                     class:selected=is_selected
                                     class:disabled=is_disabled
                                     class:exceeds=exceeds_limit
-                                    style=btn_style
                                     on:click=move |_| handle_click(num)
                                 >
-                                    <span class="pad-cell-text" style=text_style>
+                                    <span class="pad-cell-text" style=ts>
                                         {display_text}
                                     </span>
                                 </button>
@@ -251,9 +256,6 @@ pub fn NumberPad(
                 </button>
                 <button class="pad-action-btn" on:click=on_spin>
                     "隨機轉動"
-                </button>
-                <button class="pad-action-btn" on:click=on_spin_line>
-                    "轉動一排"
                 </button>
             </div>
 

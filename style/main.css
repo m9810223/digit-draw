@@ -74,9 +74,9 @@ h2 {
     border-color: var(--gold-primary);
 }
 
-/* 隱藏模式未開獎：暗紅底、暗紅字（隱藏）、暗紅框 */
+/* 隱藏模式未開獎：暗紅底、暗金字（顯示 $）、暗紅框 */
 .amount-digit.hidden {
-    color: var(--red-dark);
+    color: var(--gold-dark);
     background-color: var(--red-dark);
     border-color: var(--red-dark);
 }
@@ -158,6 +158,29 @@ h2 {
     width: 100%;
     margin: 0 auto;
     transform-style: preserve-3d;
+    overflow: hidden;
+}
+
+/* 轉動一排動畫：所有 cell 向右滑一格 */
+.number-pad-grid.rotate-row > .pad-cell {
+    animation: slide-right 0.4s ease-in-out forwards;
+}
+
+/* 轉動一排動畫：所有 cell 向下滑一格 */
+.number-pad-grid.rotate-col > .pad-cell {
+    animation: slide-down 0.4s ease-in-out forwards;
+}
+
+@keyframes slide-right {
+    to {
+        transform: translateX(calc(100% + 8px));
+    }
+}
+
+@keyframes slide-down {
+    to {
+        transform: translateY(calc(100% + 8px));
+    }
 }
 
 /* 可選：紅底、金淺字、暗紅框 */
@@ -170,10 +193,9 @@ h2 {
     border: 2px solid var(--red-dark);
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s, transform 0.6s ease;
+    transition: all 0.3s;
     margin-top: 0;
     padding: 0;
-    transform-style: preserve-3d;
 }
 
 .pad-cell-text {

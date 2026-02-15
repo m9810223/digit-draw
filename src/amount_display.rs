@@ -17,12 +17,15 @@ pub fn AmountDisplay(
                     let nums = selected_numbers.get();
                     let hidden = hidden_mode.get();
                     let finished = game_finished.get();
+                    let last_idx = needed.saturating_sub(1);
                     (0..needed)
                         .rev()
                         .map(|i| {
                             let digit = nums.get(i).copied();
                             let filled = digit.is_some();
-                            let text = if hidden && !finished {
+                            // 隱藏模式只隱藏最後一位（最高位）
+                            let is_hidden = hidden && !finished && i == last_idx;
+                            let text = if is_hidden {
                                 "$".to_string()
                             } else {
                                 digit.map(|d| d.to_string()).unwrap_or_else(|| "$".to_string())
@@ -31,7 +34,7 @@ pub fn AmountDisplay(
                                 <span
                                     class="amount-digit"
                                     class:filled=filled
-                                    class:hidden=hidden && !finished
+                                    class:hidden=is_hidden
                                     class:revealed=finished
                                 >
                                     {text}
