@@ -103,7 +103,7 @@ pub fn NumberPad(
         let size = format!("max-width: {}%", pad_size.get());
         let (ref tf, _) = grid_transform.get();
         if tf.is_empty() {
-            size
+            format!("{}; transition: transform 0.6s ease", size)
         } else {
             format!(
                 "{}; transform: {}; transition: transform 0.6s ease",
@@ -115,7 +115,7 @@ pub fn NumberPad(
     let cell_style = move || {
         let (_, ref counter) = grid_transform.get();
         if counter.is_empty() {
-            String::new()
+            "transition: transform 0.6s ease".to_string()
         } else {
             format!("transform: {}; transition: transform 0.6s ease", counter)
         }
